@@ -12,3 +12,16 @@ Game:
 - on each turn, a new '1' or '2' is dropped in an empty space.
 - when the board is full, you have lost.
 - hit Ctrl-C to exit the game.
+
+  2346
+  .234
+  .123
+  ...2
+  <
+  2346
+  234.
+  123.
+  2.1.
+  >
+  ...
+
