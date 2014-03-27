@@ -93,33 +93,45 @@ if __name__ == '__main__':
     b.drop()
     while True:
       b.draw()
-      got_valid_key = False
+      key = None
       while True:
         try:
           c = sys.stdin.read(1)
           if c == '\x1b':
             rest = sys.stdin.read(2)
             if rest == '[A':
-              print '^'
-              b.up()
-              got_valid_key = True
+              key = '^'
             elif rest == '[D':
-              print '<'
-              b.left()
-              got_valid_key = True
+              key = '<'
             elif rest == '[B':
-              print 'v'
-              b.down()
-              got_valid_key = True
+              key = 'v'
             elif rest == '[C':
-              print '>'
-              b.right()
-              got_valid_key = True
+              key = '>'
+          elif c in 'wk':
+            key = '^'
+          elif c in 'ah':
+            key = '<'
+          elif c in 'sj':
+            key = 'v'
+          elif c in 'dl':
+            key = '>'
           break;
         except IOError:
           time.sleep(.1)
-      if got_valid_key:
-        b.drop()
+
+      if key:
+        print key
+        old_rows = list(b.rows)
+        if key == '^':
+          b.up()
+        if key == 'v':
+          b.down()
+        if key == '<':
+          b.left()
+        if key == '>':
+          b.right()
+        if b.rows != old_rows:
+          b.drop()
       else:
         print 'use arrow keys!'
   finally:
