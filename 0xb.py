@@ -107,13 +107,13 @@ if __name__ == '__main__':
               key = 'v'
             elif rest == '[C':
               key = '>'
-          elif c in 'wk':
+          elif c in 'wk^':
             key = '^'
-          elif c in 'ah':
+          elif c in 'ah<':
             key = '<'
-          elif c in 'sj':
+          elif c in 'sjv':
             key = 'v'
-          elif c in 'dl':
+          elif c in 'dl>':
             key = '>'
           break;
         except IOError:
