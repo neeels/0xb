@@ -6,7 +6,7 @@ a simple ascii version of the game http://gabrielecirulli.github.io/2048/
 Game:
 - hit any arrow key, wasd or hjkl to indicate a direction.
 - numbers get pushed in that direction.
-- any two similar numbers combine to the next larger one.
+- any two adjacent similar numbers combine to the next larger one.
 - numbers are 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b
 - try to reach a 'b'!
 - on each turn, a new '1' or '2' is dropped in an empty space.
