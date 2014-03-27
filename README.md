@@ -13,15 +13,16 @@ Game:
 - when the board is full, you have lost.
 - hit Ctrl-C to exit the game.
 
-  2346
-  .234
-  .123
-  ...2
-  <
-  2346
-  234.
-  123.
-  2.1.
-  >
-  ...
+...
+2346
+.234
+.123
+...2
+<
+2346
+234.
+123.
+2.1.
+>
+...
 
