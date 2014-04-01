@@ -124,6 +124,94 @@ def colored(text, color=None, on_color=None, attrs=None):
 
 import sys, random, time
 
+large_digits = (
+    (
+     '     ',
+     '     ',
+     '  0  ',
+     '     ',
+     '     ',
+    ),
+    (
+     '   11',
+     '   11',
+     '   11',
+     '   11',
+     '   11',
+    ),
+    (
+     '2222 ',
+     '   22',
+     '  22 ',
+     '22   ',
+     '22222',
+    ),
+    (
+     '33333',
+     '   33',
+     '  33 ',
+     '   33',
+     '3333 ',
+    ),
+    (
+     '44   ',
+     '44 44',
+     '44444',
+     '   44',
+     '   44',
+    ),
+    (
+     '55555',
+     '55   ',
+     '5555 ',
+     '   55',
+     '5555 ',
+    ),
+    (
+     ' 66  ',
+     '66   ',
+     '6666 ',
+     '66 66',
+     ' 666 ',
+    ),
+    (
+     '77777',
+     '   77',
+     '  77 ',
+     ' 77  ',
+     '77   ',
+    ),
+    (
+     ' 888 ',
+     '8   8',
+     ' 888 ',
+     '8   8',
+     ' 888 ',
+    ),
+    (
+     ' 999 ',
+     '99 99',
+     ' 9999',
+     '   99',
+     ' 999 ',
+    ),
+    (
+     '     ',
+     ' aa  ',
+     'a  a ',
+     'aaaa ',
+     'a  a ',
+    ),
+    (
+     'b!you',
+     'B!WIN',
+     'bBbB!',
+     'B!!bB',
+     'bBbB!',
+    ),
+  )
+  
+
 
 def shove(items, zero_items=lambda l:[0]*l, reverse=False):
   was_len = len(items)
@@ -144,7 +232,7 @@ def shove(items, zero_items=lambda l:[0]*l, reverse=False):
 
 class Cell:
   last_cell_color = 0
-  colors = ('white', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', )
+  colors = ('red', 'green', 'yellow', 'blue', 'magenta', 'cyan', )
 
   def __init__(c, val=0, col=None):
     c.val = val
@@ -179,7 +267,17 @@ class Cell:
       return '.'
     else:
       s = hex(c.val)[2:]
-      return colored(s, Cell.colors[c.col % len(Cell.colors)])
+      return c.colored(s)
+
+  def colored(c, txt):
+    if not c.val:
+      return txt
+    return colored(txt, Cell.colors[c.col % len(Cell.colors)])
+
+  def colored_large_digit(c):
+    digit = large_digits[c.val]
+    return [c.colored(digit_row) for digit_row in digit]
+
 
 
 def new_cells(n):
@@ -200,9 +298,19 @@ class Board:
   def cell(b, x, y):
     return b.rows[y][x]
 
-  def draw(b):
+  def draw_small(b):
     for r in b.rows:
       print ''.join([str(c) for c in r])
+
+  def draw_large(b):
+    for row in b.rows:
+
+      colored_digits = [c.colored_large_digit() for c in row]
+      lines = '\n'.join([ '  '.join(line_parts) for line_parts in zip(*colored_digits)])
+      print lines, '\n'
+
+  def draw(b):
+    return b.draw_large()
 
   def left(b):
     for r in range(len(b.rows)):
@@ -252,10 +360,24 @@ if __name__ == '__main__':
   fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
 
   try:
-    b = Board(4, 4)
+    w = 4
+    h = 4
+
+    if len(sys.argv) >= 2:
+      w = int(sys.argv[1])
+      h = w
+
+    if len(sys.argv) >= w:
+      h = int(sys.argv[2])
+
+    b = Board(w, h)
     b.drop()
+    key = None
     while True:
+      print '\n\n\n\n\n'
       b.draw()
+      if key:
+        print key,
       key = None
       while True:
         try:
@@ -283,7 +405,6 @@ if __name__ == '__main__':
           time.sleep(.1)
 
       if key:
-        print key
         old_rows = list(b.rows)
         if key == '^':
           b.up()
