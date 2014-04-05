@@ -122,7 +122,7 @@ def colored(text, color=None, on_color=None, attrs=None):
 # SNIP: end of termcolor.py from http://pypi.python.org/pypi/termcolor/1.0.0
 # GPLv3 License applies from this line on.
 
-import sys, random, time
+import sys, random, time, copy
 
 large_digits = (
     (
@@ -133,11 +133,11 @@ large_digits = (
      '     ',
     ),
     (
-     '   11',
-     '   11',
-     '   11',
-     '   11',
-     '   11',
+     '  11 ',
+     ' 111 ',
+     '  11 ',
+     '  11 ',
+     '  11 ',
     ),
     (
      '2222 ',
@@ -196,18 +196,18 @@ large_digits = (
      ' 999 ',
     ),
     (
-     '     ',
-     ' aa  ',
-     'a  a ',
-     'aaaa ',
-     'a  a ',
+     ' aaa ',
+     '   aa',
+     ' aaaa',
+     'aa aa',
+     ' aaaa',
     ),
     (
-     'b!you',
-     'B!WIN',
-     'bBbB!',
-     'B!!bB',
-     'bBbB!',
+     '0x :D',
+     'bb   ',
+     'bbbb ',
+     'bb bb',
+     'bbbb ',
     ),
   )
   
@@ -217,7 +217,7 @@ def shove(items, zero_items=lambda l:[0]*l, reverse=False):
   was_len = len(items)
   if reverse:
     items = reversed(items)
-  items = [i for i in items if i]
+  items = [copy.deepcopy(i) for i in items if i]
   i = 0
   while i < (len(items) - 1):
     if items[i] == items[i + 1]:
@@ -240,9 +240,6 @@ class Cell:
       Cell.last_cell_color += 1
       col = Cell.last_cell_color
     c.col = col
-
-  def __cmp__(c, other):
-    return cmp(c.val, int(other))
 
   def __repr__(c):
     return '<%d,%d>'%(c.val, c.col)
@@ -286,65 +283,128 @@ def new_cells(n):
     c.append(Cell())
   return c
 
-class Board:
+def draw_small(rows):
+  for r in rows:
+    print ''.join([str(c) for c in r])
 
-  def __init__(b, w=4, h=4):
+def draw_large(rows):
+  for row in rows:
+    colored_digits = [c.colored_large_digit() for c in row]
+    lines = '\n'.join([ '  '.join(line_parts) for line_parts in zip(*colored_digits)])
+    print lines, '\n'
+
+def islist(x):
+  return isinstance(x, list) or isinstance(x, tuple)
+
+def same(a, b):
+  if islist(a):
+    if (not islist(b)) or (len(a) != len(b)):
+      return False
+    for i in range(len(a)):
+      if not same(a[i], b[i]):
+        return False
+    return True
+  return a == b
+
+
+class Board:
+  START = '' #
+  LEFT = '<'
+  RIGHT = '>'
+  UP = '^'
+  DOWN = 'v'
+
+  def __init__(b, w=4, h=4, gamenr=None):
     b.W = w
     b.H = h
-    b.rows = []
-    for y in range(h):
-      b.rows.append(new_cells(w))
+    b.moves = []
+    b.undo_count = 0
+    b.r = random.Random()
+    if gamenr is not None:
+      b.seed = gamenr
+    else:
+      b.seed = random.randint(0, 42e8)
+    rows = [new_cells(w) for y in range(h)]
+    b.record_move(b.START, rows)
 
-  def cell(b, x, y):
-    return b.rows[y][x]
+  def choice(b, l):
+    seed = b.seed + len(b.moves) - b.undo_count
+    b.r.seed(seed)
+    return b.r.choice(l)
 
-  def draw_small(b):
-    for r in b.rows:
-      print ''.join([str(c) for c in r])
+  def get_state(b):
+    step = len(b.moves) - b.undo_count
+    direction, rows = b.moves[step - 1]
+    return step, direction, rows
 
-  def draw_large(b):
-    for row in b.rows:
-
-      colored_digits = [c.colored_large_digit() for c in row]
-      lines = '\n'.join([ '  '.join(line_parts) for line_parts in zip(*colored_digits)])
-      print lines, '\n'
+  def get_rows(b):
+    step, direction, rows = b.get_state()
+    return rows
 
   def draw(b):
-    return b.draw_large()
+    step, direction, rows = b.get_state()
+    print '0xb #%d   %3d: %s   \n' % (b.seed, step, direction)
+    draw_large(rows)
+    print
 
   def left(b):
-    for r in range(len(b.rows)):
-      b.rows[r] = shove(b.rows[r], new_cells)
+    rows = [shove(r, new_cells) for r in b.get_rows()]
+    b.record_move(b.LEFT, rows)
 
   def right(b):
-    for r in range(len(b.rows)):
-      b.rows[r] = shove(b.rows[r], new_cells, True)
+    rows = [shove(r, new_cells, True) for r in b.get_rows()]
+    b.record_move(b.RIGHT, rows)
 
   def up(b):
-    cols = [list(col) for col in zip(*b.rows)]
-    for c in range(len(cols)):
-      cols[c] = shove(cols[c], new_cells)
-    b.rows = [list(row) for row in zip(*cols)]
+    cols = [shove(c, new_cells) for c in zip(*b.get_rows())]
+    rows = zip(*cols)
+    b.record_move(b.UP, rows)
 
   def down(b):
-    cols = [list(col) for col in zip(*b.rows)]
-    for c in range(len(cols)):
-      cols[c] = shove(cols[c], new_cells, True)
-    b.rows = [list(row) for row in zip(*cols)]
+    cols = [shove(c, new_cells, True) for c in zip(*b.get_rows())]
+    rows = zip(*cols)
+    b.record_move(b.DOWN, rows)
 
-  def drop(b):
+  def drop(b, rows):
+    '''drop a new value into one of the cells in <rows>,
+    return False if there was no space left to drop, True otherwise.
+    Use b's rewindable random contraption to choose a position.'''
+    def cell(x, y):
+      return rows[y][x]
     coords = []
     for y in range(b.H):
       for x in range(b.W):
-        c = b.cell(x,y)
-        if not b.cell(x, y):
+        c = cell(x,y)
+        if not cell(x, y):
           coords.append((x, y))
     if coords:
-      x, y = random.choice(coords)
-      b.rows[y][x].val = random.choice((1, 2))
+      x, y = b.choice(coords)
+      rows[y][x].val = b.choice((1, 2))
       return True
     return False
 
+  def record_move(b, direction, rows):
+    assert direction in (b.START, b.UP, b.DOWN, b.LEFT, b.RIGHT)
+    # don't count moves that had no effect,
+    # and discard undone moves
+    if b.moves:
+      step = len(b.moves) - b.undo_count
+      if b.undo_count:
+        b.moves = b.moves[:-b.undo_count]
+        b.undo_count = 0
+      lastdir, lastrows = b.moves[-1]
+      if same(rows, lastrows):
+        return
+    b.drop(rows)
+    b.moves.append((direction, rows))
+
+  def undo(b):
+    if b.undo_count < (len(b.moves) - 1):
+      b.undo_count += 1
+
+  def redo(b):
+    if b.undo_count > 0:
+      b.undo_count -= 1
 
 
 if __name__ == '__main__':
@@ -363,25 +423,32 @@ if __name__ == '__main__':
     w = 4
     h = 4
 
-    if len(sys.argv) >= 2:
+    if len(sys.argv) > 1:
       w = int(sys.argv[1])
       h = w
 
-    if len(sys.argv) >= w:
+    if len(sys.argv) > 2:
       h = int(sys.argv[2])
 
-    b = Board(w, h)
-    b.drop()
+    gamenr = None
+    if len(sys.argv) > 3:
+      try:
+        gamenr = int(sys.argv[3])
+      except ValueError:
+        print('third arg is a game nr')
+        exit(1)
+
+
+    b = Board(w, h, gamenr)
     key = None
     while True:
       print '\n\n\n\n\n'
       b.draw()
-      if key:
-        print key,
       key = None
       while True:
         try:
           c = sys.stdin.read(1)
+          print c
           if c == '\x1b':
             rest = sys.stdin.read(2)
             if rest == '[A':
@@ -400,24 +467,29 @@ if __name__ == '__main__':
             key = 'v'
           elif c in 'dl>':
             key = '>'
+          elif c in 'bzyup,':
+            key = 'u'
+          elif c in 'fZYrn.':
+            key = 'r'
           break;
         except IOError:
           time.sleep(.1)
 
       if key:
-        old_rows = list(b.rows)
         if key == '^':
           b.up()
-        if key == 'v':
+        elif key == 'v':
           b.down()
-        if key == '<':
+        elif key == '<':
           b.left()
-        if key == '>':
+        elif key == '>':
           b.right()
-        if b.rows != old_rows:
-          b.drop()
+        elif key == 'u':
+          b.undo()
+        elif key == 'r':
+          b.redo()
       else:
-        print 'use arrow keys to shove, ctrl-c to quit'
+        print 'use arrow keys to shove, ctrl-c to quit, u to undo, r to redo'
   finally:
       termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
       fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
