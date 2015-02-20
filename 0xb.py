@@ -345,6 +345,7 @@ class Board:
     step, direction, rows = b.get_state()
     print '0xb #%d   %3d: %s   \n' % (b.seed, step, direction)
     draw_large(rows)
+    #draw_small(rows)
     print
 
   def left(b):
