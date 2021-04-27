@@ -124,6 +124,8 @@ def colored(text, color=None, on_color=None, attrs=None):
 
 import sys, random, time, copy
 
+small_board = False
+
 large_digits = (
     (
      '     ',
@@ -344,8 +346,10 @@ class Board:
   def draw(b):
     step, direction, rows = b.get_state()
     print('0xb #%d   %3d: %s   \n' % (b.seed, step, direction))
-    draw_large(rows)
-    #draw_small(rows)
+    if small_board:
+      draw_small(rows)
+    else:
+      draw_large(rows)
     print()
 
   def left(b):
@@ -407,7 +411,20 @@ class Board:
       b.undo_count -= 1
 
 
+def usage():
+  print('Usage:\n  %s [--small] [<width> [<height> [<game-nr>]]]' % sys.argv[0])
+  exit(0)
+
 if __name__ == '__main__':
+  args = [arg for arg in sys.argv[1:] if not arg.startswith('-')]
+  opts = [arg for arg in sys.argv[1:] if arg.startswith('-')]
+
+  for o in opts:
+    if o == '--small':
+      small_board = True
+    else:
+      usage()
+
   import termios, fcntl, sys, os
   fd = sys.stdin.fileno()
 
@@ -422,22 +439,20 @@ if __name__ == '__main__':
   try:
     w = 4
     h = 4
-
-    if len(sys.argv) > 1:
-      w = int(sys.argv[1])
-      h = w
-
-    if len(sys.argv) > 2:
-      h = int(sys.argv[2])
-
     gamenr = None
-    if len(sys.argv) > 3:
-      try:
-        gamenr = int(sys.argv[3])
-      except ValueError:
-        print('third arg is a game nr')
-        exit(1)
 
+    try:
+      if len(args) > 0:
+        w = int(args[0])
+        h = w
+
+      if len(args) > 1:
+        h = int(sys.argv[1])
+
+      if len(args) > 2:
+        gamenr = int(args[2])
+    except:
+      usage()
 
     b = Board(w, h, gamenr)
     key = None
