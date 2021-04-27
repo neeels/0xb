@@ -454,6 +454,38 @@ if __name__ == '__main__':
     except:
       usage()
 
+    print('''HIT ANY KEY TO START!
+
+  Your goal is to combine equal numbers, and reach a 'b':
+  1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> a -> b
+
+  This is a simple ascii version of the game http://gabrielecirulli.github.io/2048/
+
+  controls:
+
+    Any of these to push up/left/right/down-wards:
+
+      UP    LEFT  RIGHT DOWN
+      w     a     s     d
+      k     h     j     l
+      ^     <     >     v
+
+    Undo: u b p z y ,
+    as in (u)ndo (b)ack (p)revious ctrl-(z) ctrl-(y)
+
+    Redo: r f n Z Y .
+    as in (r)edo (f)orward (n)ext ctrl-shift-(Z) ctrl-shift-(Y)
+
+    Quit: CTRL-C
+
+HIT ANY KEY TO START!
+    ''')
+    while True:
+      c = sys.stdin.read(1)
+      if c:
+        break
+      time.sleep(.1)
+
     b = Board(w, h, gamenr)
     key = None
     while True:
