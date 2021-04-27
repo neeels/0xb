@@ -493,4 +493,5 @@ if __name__ == '__main__':
   finally:
       termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
       fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
-    
+
+# vim: shiftwidth=2 tabstop=2 expandtab
