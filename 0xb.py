@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # SNIP: included termcolor.py from http://pypi.python.org/pypi/termcolor/1.0.0
 ########################################################################
@@ -216,7 +216,7 @@ large_digits = (
 def shove(items, zero_items=lambda l:[0]*l, reverse=False):
   was_len = len(items)
   if reverse:
-    items = reversed(items)
+    items = list(reversed(items))
   items = [copy.deepcopy(i) for i in items if i]
   i = 0
   while i < (len(items) - 1):
@@ -244,7 +244,7 @@ class Cell:
   def __repr__(c):
     return '<%d,%d>'%(c.val, c.col)
 
-  def __nonzero__(c):
+  def __bool__(c):
     return bool(c.val)
 
   def __int__(c):
@@ -285,13 +285,13 @@ def new_cells(n):
 
 def draw_small(rows):
   for r in rows:
-    print ''.join([str(c) for c in r])
+    print(''.join([str(c) for c in r]))
 
 def draw_large(rows):
   for row in rows:
     colored_digits = [c.colored_large_digit() for c in row]
     lines = '\n'.join([ '  '.join(line_parts) for line_parts in zip(*colored_digits)])
-    print lines, '\n'
+    print(lines + '\n')
 
 def islist(x):
   return isinstance(x, list) or isinstance(x, tuple)
@@ -343,10 +343,10 @@ class Board:
 
   def draw(b):
     step, direction, rows = b.get_state()
-    print '0xb #%d   %3d: %s   \n' % (b.seed, step, direction)
+    print('0xb #%d   %3d: %s   \n' % (b.seed, step, direction))
     draw_large(rows)
     #draw_small(rows)
-    print
+    print()
 
   def left(b):
     rows = [shove(r, new_cells) for r in b.get_rows()]
@@ -357,13 +357,13 @@ class Board:
     b.record_move(b.RIGHT, rows)
 
   def up(b):
-    cols = [shove(c, new_cells) for c in zip(*b.get_rows())]
-    rows = zip(*cols)
+    cols = [shove(c, new_cells) for c in list(zip(*b.get_rows()))]
+    rows = list(zip(*cols))
     b.record_move(b.UP, rows)
 
   def down(b):
-    cols = [shove(c, new_cells, True) for c in zip(*b.get_rows())]
-    rows = zip(*cols)
+    cols = [shove(c, new_cells, True) for c in list(zip(*b.get_rows()))]
+    rows = list(zip(*cols))
     b.record_move(b.DOWN, rows)
 
   def drop(b, rows):
@@ -443,13 +443,13 @@ if __name__ == '__main__':
     b = Board(w, h, gamenr)
     key = None
     while True:
-      print '\n\n\n\n\n'
+      print('\n\n\n\n\n')
       b.draw()
       key = None
       while True:
-        try:
-          c = sys.stdin.read(1)
-          print c
+        c = sys.stdin.read(1)
+        if c:
+          print(c)
           if c == '\x1b':
             rest = sys.stdin.read(2)
             if rest == '[A':
@@ -473,7 +473,7 @@ if __name__ == '__main__':
           elif c in 'fZYrn.':
             key = 'r'
           break;
-        except IOError:
+        else:
           time.sleep(.1)
 
       if key:
@@ -490,7 +490,7 @@ if __name__ == '__main__':
         elif key == 'r':
           b.redo()
       else:
-        print 'use arrow keys to shove, ctrl-c to quit, u to undo, r to redo'
+        print('use arrow keys to shove, ctrl-c to quit, u to undo, r to redo')
   finally:
       termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
       fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
