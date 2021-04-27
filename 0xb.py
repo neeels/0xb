@@ -375,7 +375,6 @@ class Board:
     coords = []
     for y in range(b.H):
       for x in range(b.W):
-        c = cell(x,y)
         if not cell(x, y):
           coords.append((x, y))
     if coords:
